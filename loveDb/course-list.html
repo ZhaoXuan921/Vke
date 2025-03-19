@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>东北方言宝典 - 课程列表</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .course-card {
+      transition: all 0.3s ease;
+    }
+    .course-card:hover {
+      transform: translateY(-3px);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-16">
+  <!-- 顶部导航 -->
+  <header class="bg-white sticky top-0 z-50 shadow-sm">
+    <nav class="container mx-auto px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="w-8">
+          <button class="text-gray-500">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+        </div>
+        <h1 class="text-lg font-bold text-center">东北话课程</h1>
+        <div class="w-8"></div> <!-- 右侧空白占位 -->
+      </div>
+    </nav>
+  </header>
+
+  <!-- 主要内容 -->
+  <main class="container mx-auto px-4 py-6">
+    <!-- 课程分类标签 -->
+    <div class="flex overflow-x-auto py-2 mb-6 scrollbar-hide">
+      <button class="px-4 py-2 bg-red-500 text-white rounded-full mr-2 whitespace-nowrap">
+        全部课程
+      </button>
+      <button class="px-4 py-2 bg-white text-gray-700 rounded-full mr-2 whitespace-nowrap shadow-sm">
+        基础班
+      </button>
+      <button class="px-4 py-2 bg-white text-gray-700 rounded-full mr-2 whitespace-nowrap shadow-sm">
+        进阶班
+      </button>
+      <button class="px-4 py-2 bg-white text-gray-700 rounded-full mr-2 whitespace-nowrap shadow-sm">
+        高手班
+      </button>
+      <button class="px-4 py-2 bg-white text-gray-700 rounded-full mr-2 whitespace-nowrap shadow-sm">
+        方言故事
+      </button>
+    </div>
+
+    <!-- 基础班课程 -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-gray-800">基础班</h2>
+        <button class="text-sm text-red-500">查看全部</button>
+      </div>
+      
+      <div class="space-y-4">
+        <!-- 课程1 -->
+        <div class="course-card bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="flex">
+            <div class="w-24 h-24 bg-red-100">
+              <img src="https://images.unsplash.com/photo-1516383607781-913a19294fd1?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80" alt="日常问候" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1 p-3">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-gray-800">日常问候语</h3>
+                <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">基础</span>
+              </div>
+              <p class="text-sm text-gray-500 mt-1 mb-2">学习东北人最常用的问候方式</p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <i class="fas fa-play-circle text-red-500 mr-1"></i>
+                  <span class="text-xs text-gray-500">10课时</span>
+                </div>
+                <button class="text-sm text-white bg-red-500 px-3 py-1 rounded-lg">
+                  开始学习
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 课程2 -->
+        <div class="course-card bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="flex">
+            <div class="w-24 h-24 bg-red-100">
+              <img src="https://images.unsplash.com/photo-1484069560501-87d72b0c3669?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80" alt="食物词汇" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1 p-3">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-gray-800">美食词汇</h3>
+                <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">基础</span>
+              </div>
+              <p class="text-sm text-gray-500 mt-1 mb-2">东北特色美食的地道叫法</p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <i class="fas fa-play-circle text-red-500 mr-1"></i>
+                  <span class="text-xs text-gray-500">8课时</span>
+                </div>
+                <button class="text-sm text-white bg-red-500 px-3 py-1 rounded-lg">
+                  开始学习
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 课程3 -->
+        <div class="course-card bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="flex">
+            <div class="w-24 h-24 bg-red-100">
+              <img src="https://images.unsplash.com/photo-1517457373958-b7bdd4587205?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80" alt="天气表达" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1 p-3">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-gray-800">天气表达</h3>
+                <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">基础</span>
+              </div>
+              <p class="text-sm text-gray-500 mt-1 mb-2">描述东北四季天气的地道表达</p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <i class="fas fa-play-circle text-red-500 mr-1"></i>
+                  <span class="text-xs text-gray-500">6课时</span>
+                </div>
+                <button class="text-sm text-white bg-red-500 px-3 py-1 rounded-lg">
+                  开始学习
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 进阶班课程 -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold text-gray-800">进阶班</h2>
+        <button class="text-sm text-red-500">查看全部</button>
+      </div>
+      
+      <div class="space-y-4">
+        <!-- 课程1 -->
+        <div class="course-card bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="flex">
+            <div class="w-24 h-24 bg-yellow-100">
+              <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80" alt="幽默表达" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1 p-3">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-gray-800">幽默表达</h3>
+                <span class="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full">进阶</span>
+              </div>
+              <p class="text-sm text-gray-500 mt-1 mb-2">东北人的幽默方式和表达技巧</p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <i class="fas fa-play-circle text-yellow-500 mr-1"></i>
+                  <span class="text-xs text-gray-500">12课时</span>
+                </div>
+                <button class="text-sm text-white bg-yellow-500 px-3 py-1 rounded-lg">
+                  开始学习
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 课程2 -->
+        <div class="course-card bg-white rounded-xl shadow-sm overflow-hidden">
+          <div class="flex">
+            <div class="w-24 h-24 bg-yellow-100">
+              <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=200&q=80" alt="情感表达" class="w-full h-full object-cover">
+            </div>
+            <div class="flex-1 p-3">
+              <div class="flex items-center justify-between">
+                <h3 class="font-bold text-gray-800">情感表达</h3>
+                <span class="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full">进阶</span>
+              </div>
+              <p class="text-sm text-gray-500 mt-1 mb-2">东北人表达喜怒哀乐的独特方式</p>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                  <i class="fas fa-play-circle text-yellow-500 mr-1"></i>
+                  <span class="text-xs text-gray-500">9课时</span>
+                </div>
+                <button class="text-sm text-white bg-yellow-500 px-3 py-1 rounded-lg">
+                  开始学习
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 底部导航 -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+    <div class="flex justify-around py-3">
+      <button class="flex flex-col items-center text-gray-400">
+        <i class="fas fa-home text-xl"></i>
+        <span class="text-xs mt-1">首页</span>
+      </button>
+      <button class="flex flex-col items-center text-red-500">
+        <i class="fas fa-book-open text-xl"></i>
+        <span class="text-xs mt-1">学习</span>
+      </button>
+      <button class="flex flex-col items-center text-gray-400">
+        <i class="fas fa-gamepad text-xl"></i>
+        <span class="text-xs mt-1">娱乐</span>
+      </button>
+      <button class="flex flex-col items-center text-gray-400">
+        <i class="fas fa-user text-xl"></i>
+        <span class="text-xs mt-1">我的</span>
+      </button>
+    </div>
+  </footer>
+</body>
+</html> 

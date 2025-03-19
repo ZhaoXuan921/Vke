@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分布地图</title>
+    <!-- 使用更可靠的 CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        #sidebar {
+            width: 300px;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e5e5e5;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        #map-container {
+            flex: 1;
+            height: 100vh;
+            position: relative;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        #error-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 2000;
+        }
+        .location-item {
+            padding: 12px;
+            border-bottom: 1px solid #e5e5e5;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .location-item:hover {
+            background-color: #f5f5f5;
+        }
+        .location-item.active {
+            background-color: #e3f2fd;
+        }
+        .location-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .location-coords {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .location-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: white;
+        }
+        .status-normal {
+            background-color: #4CAF50;
+        }
+        .status-warning {
+            background-color: #FFC107;
+        }
+        .status-error {
+            background-color: #F44336;
+        }
+        .sidebar-header {
+            padding: 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e5e5e5;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .search-box {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .filter-button {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            background: #e9ecef;
+            white-space: nowrap;
+            flex: 1;
+            text-align: center;
+        }
+        .filter-button.active[data-status="all"] {
+            background: #3f51b5;
+            color: white;
+        }
+        .filter-button.active[data-status="normal"] {
+            background: #4CAF50;
+            color: white;
+        }
+        .filter-button.active[data-status="warning"] {
+            background: #FFC107;
+            color: black;
+        }
+        .filter-button.active[data-status="error"] {
+            background: #F44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <input type="text" class="search-box" placeholder="搜索设施..." id="searchInput">
+            <div class="filter-buttons">
+                <button class="filter-button active" data-status="all">全部</button>
+                <button class="filter-button" data-status="normal">正常运行</button>
+                <button class="filter-button" data-status="warning">需要检修</button>
+                <button class="filter-button" data-status="error">设备异常</button>
+            </div>
+        </div>
+        <div id="location-list"></div>
+    </div>
+    <div id="map-container">
+        <div id="map"></div>
+        <div id="error-message">
+            地图加载失败，请检查网络连接后刷新页面
+        </div>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4CAF50"></div>
+                <span>正常运行</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #FFC107"></div>
+                <span>需要检修</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #F44336"></div>
+                <span>设备异常</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        try {
+            // 等待页面完全加载
+            window.addEventListener('load', function() {
+                // 坐标转换函数
+                function transformLat(x, y) {
+                    let ret = -100.0 + 2.0 * x + 3.0 * y + 0.2 * y * y + 0.1 * x * y + 0.2 * Math.sqrt(Math.abs(x));
+                    ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+                    ret += (20.0 * Math.sin(y * Math.PI) + 40.0 * Math.sin(y / 3.0 * Math.PI)) * 2.0 / 3.0;
+                    ret += (160.0 * Math.sin(y / 12.0 * Math.PI) + 320 * Math.sin(y * Math.PI / 30.0)) * 2.0 / 3.0;
+                    return ret;
+                }
+
+                function transformLon(x, y) {
+                    let ret = 300.0 + x + 2.0 * y + 0.1 * x * x + 0.1 * x * y + 0.1 * Math.sqrt(Math.abs(x));
+                    ret += (20.0 * Math.sin(6.0 * x * Math.PI) + 20.0 * Math.sin(2.0 * x * Math.PI)) * 2.0 / 3.0;
+                    ret += (20.0 * Math.sin(x * Math.PI) + 40.0 * Math.sin(x / 3.0 * Math.PI)) * 2.0 / 3.0;
+                    ret += (150.0 * Math.sin(x / 12.0 * Math.PI) + 300.0 * Math.sin(x / 30.0 * Math.PI)) * 2.0 / 3.0;
+                    return ret;
+                }
+
+                function transform(lat, lon) {
+                    const a = 6378245.0;
+                    const ee = 0.00669342162296594323;
+                    let dLat = transformLat(lon - 105.0, lat - 35.0);
+                    let dLon = transformLon(lon - 105.0, lat - 35.0);
+                    const radLat = lat / 180.0 * Math.PI;
+                    let magic = Math.sin(radLat);
+                    magic = 1 - ee * magic * magic;
+                    const sqrtMagic = Math.sqrt(magic);
+                    dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * Math.PI);
+                    dLon = (dLon * 180.0) / (a / sqrtMagic * Math.cos(radLat) * Math.PI);
+                    return [lat + dLat, lon + dLon];
+                }
+
+                // 初始化地图
+                const map = L.map('map', {
+                    minZoom: 3,
+                    maxZoom: 18,
+                    center: [23.13, 113.27], // 广州市中心
+                    zoom: 12  // 调整缩放级别以显示整个广州市区
+                });
+
+                // 使用高德地图瓦片
+                L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}', {
+                    subdomains: ["1", "2", "3", "4"],
+                    attribution: '© 高德地图',
+                    opacity: 0.6  // 降低地图底图整体透明度
+                }).addTo(map);
+
+                // 定义不同大小和颜色的标记点（广州市电网设施）
+                const markers = [
+                    // 越秀区
+                    { lat: 23.129, lng: 113.264, color: '#4CAF50', size: 35, name: '智能接地线01' },
+                    { lat: 23.125, lng: 113.280, color: '#F44336', size: 30, name: '智能接地线02' },
+                    { lat: 23.112, lng: 113.271, color: '#4CAF50', size: 30, name: '智能接地线03' },
+                    { lat: 23.137, lng: 113.271, color: '#FFC107', size: 25, name: '智能接地线04' },
+                    
+                    // 天河区
+                    { lat: 23.132, lng: 113.321, color: '#F44336', size: 35, name: '智能接地线05' },
+                    { lat: 23.141, lng: 113.327, color: '#4CAF50', size: 30, name: '智能接地线06' },
+                    { lat: 23.125, lng: 113.330, color: '#4CAF50', size: 25, name: '智能接地线07' },
+                    { lat: 23.138, lng: 113.332, color: '#FFC107', size: 25, name: '智能接地线08' },
+                    
+                    // 海珠区
+                    { lat: 23.099, lng: 113.320, color: '#F44336', size: 30, name: '智能接地线09' },
+                    { lat: 23.091, lng: 113.342, color: '#4CAF50', size: 25, name: '智能接地线10' },
+                    { lat: 23.104, lng: 113.327, color: '#FFC107', size: 20, name: '智能接地线11' },
+                    
+                    // 荔湾区
+                    { lat: 23.126, lng: 113.232, color: '#4CAF50', size: 25, name: '智能接地线12' },
+                    { lat: 23.114, lng: 113.245, color: '#F44336', size: 20, name: '智能接地线13' },
+                    
+                    // 白云区
+                    { lat: 23.169, lng: 113.269, color: '#4CAF50', size: 30, name: '智能接地线14' },
+                    { lat: 23.181, lng: 113.257, color: '#FFC107', size: 25, name: '智能接地线15' },
+                    
+                    // 黄埔区
+                    { lat: 23.112, lng: 113.450, color: '#F44336', size: 25, name: '智能接地线16' },
+                    { lat: 23.165, lng: 113.526, color: '#4CAF50', size: 20, name: '智能接地线17' },
+                    
+                    // 番禺区
+                    { lat: 22.938, lng: 113.384, color: '#4CAF50', size: 25, name: '智能接地线18' },
+                    { lat: 22.932, lng: 113.352, color: '#FFC107', size: 20, name: '智能接地线19' },
+                    
+                    // 花都区
+                    { lat: 23.404, lng: 113.220, color: '#F44336', size: 25, name: '智能接地线20' },
+
+                    // 新增5个绿色标记点
+                    { lat: 23.145, lng: 113.315, color: '#4CAF50', size: 25, name: '智能接地线21' },
+                    { lat: 23.117, lng: 113.265, color: '#4CAF50', size: 25, name: '智能接地线22' },
+                    { lat: 23.095, lng: 113.300, color: '#4CAF50', size: 25, name: '智能接地线23' },
+                    { lat: 23.155, lng: 113.290, color: '#4CAF50', size: 25, name: '智能接地线24' },
+                    { lat: 23.120, lng: 113.400, color: '#4CAF50', size: 25, name: '智能接地线25' }
+                ];
+
+                // 存储所有标记点的引用
+                const markerRefs = new Map();
+
+                // 渲染位置列表
+                function renderLocationList(filteredMarkers = markers) {
+                    const locationList = document.getElementById('location-list');
+                    locationList.innerHTML = '';
+
+                    filteredMarkers.forEach((marker, index) => {
+                        const status = getStatus(marker.color);
+                        const div = document.createElement('div');
+                        div.className = 'location-item';
+                        div.innerHTML = `
+                            <div class="location-name">${marker.name}</div>
+                            <div class="location-coords">经度: ${marker.lng.toFixed(3)}° | 纬度: ${marker.lat.toFixed(3)}°</div>
+                            <div class="location-status status-${status}">${getStatusText(status)}</div>
+                        `;
+
+                        div.addEventListener('mouseover', () => {
+                            const circleMarker = markerRefs.get(index);
+                            if (circleMarker) {
+                                circleMarker.setStyle({
+                                    fillOpacity: 1,
+                                    weight: 3
+                                });
+                                circleMarker.openTooltip();
+                            }
+                            div.classList.add('active');
+                        });
+
+                        div.addEventListener('mouseout', () => {
+                            const circleMarker = markerRefs.get(index);
+                            if (circleMarker) {
+                                circleMarker.setStyle({
+                                    fillOpacity: 0.9,
+                                    weight: 2
+                                });
+                                circleMarker.closeTooltip();
+                            }
+                            div.classList.remove('active');
+                        });
+
+                        div.addEventListener('click', () => {
+                            const [lat, lng] = transform(marker.lat, marker.lng);
+                            map.setView([lat, lng], 14);
+                        });
+
+                        locationList.appendChild(div);
+                    });
+                }
+
+                // 获取状态类型
+                function getStatus(color) {
+                    switch (color) {
+                        case '#4CAF50': return 'normal';
+                        case '#FFC107': return 'warning';
+                        case '#F44336': return 'error';
+                        default: return 'normal';
+                    }
+                }
+
+                // 获取状态文本
+                function getStatusText(status) {
+                    switch (status) {
+                        case 'normal': return '正常运行';
+                        case 'warning': return '需要检修';
+                        case 'error': return '设备异常';
+                        default: return '未知状态';
+                    }
+                }
+
+                // 添加标记点到地图
+                markers.forEach((marker, index) => {
+                    const [lat, lng] = transform(marker.lat, marker.lng);
+                    const circleMarker = L.circleMarker([lat, lng], {
+                        radius: marker.size / 2,
+                        fillColor: marker.color,
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.9
+                    }).addTo(map);
+
+                    circleMarker.bindTooltip(marker.name, {
+                        permanent: false,
+                        direction: 'top',
+                        className: 'custom-tooltip'
+                    });
+
+                    // 存储标记点引用
+                    markerRefs.set(index, circleMarker);
+
+                    // 添加标记点的鼠标事件
+                    circleMarker.on('mouseover', () => {
+                        const listItems = document.querySelectorAll('.location-item');
+                        listItems[index].classList.add('active');
+                        listItems[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    });
+
+                    circleMarker.on('mouseout', () => {
+                        const listItems = document.querySelectorAll('.location-item');
+                        listItems[index].classList.remove('active');
+                    });
+                });
+
+                // 初始渲染列表
+                renderLocationList();
+
+                // 搜索功能
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    const searchText = e.target.value.toLowerCase();
+                    const filteredMarkers = markers.filter(marker => 
+                        marker.name.toLowerCase().includes(searchText)
+                    );
+                    renderLocationList(filteredMarkers);
+                });
+
+                // 筛选功能
+                document.querySelectorAll('.filter-button').forEach(button => {
+                    button.addEventListener('click', () => {
+                        // 更新按钮状态
+                        document.querySelectorAll('.filter-button').forEach(btn => 
+                            btn.classList.remove('active')
+                        );
+                        button.classList.add('active');
+
+                        // 筛选标记点
+                        const status = button.dataset.status;
+                        const filteredMarkers = status === 'all' ? markers : markers.filter(marker => {
+                            const markerStatus = getStatus(marker.color);
+                            return markerStatus === status;
+                        });
+                        renderLocationList(filteredMarkers);
+                    });
+                });
+
+                // 添加自定义样式
+                const style = document.createElement('style');
+                style.textContent = `
+                    .custom-tooltip {
+                        background: rgba(255, 255, 255, 0.9);
+                        border: none;
+                        border-radius: 4px;
+                        padding: 4px 8px;
+                        font-size: 12px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                    .custom-tooltip:before {
+                        border-top-color: rgba(255, 255, 255, 0.9);
+                    }
+                `;
+                document.head.appendChild(style);
+            });
+        } catch (error) {
+            // 显示错误信息
+            document.getElementById('error-message').style.display = 'block';
+            console.error('地图加载失败:', error);
+        }
+    </script>
+</body>
+</html> 

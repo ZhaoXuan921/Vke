@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>东北方言宝典 - 你画我猜</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .drawing-canvas {
+      background-color: white;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    .color-picker {
+      display: flex;
+      gap: 8px;
+    }
+    .color-option {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+    .color-option.active {
+      transform: scale(1.2);
+      border-color: #333;
+    }
+    .brush-size {
+      display: flex;
+      gap: 8px;
+    }
+    .brush-option {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #333;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .brush-option.active {
+      transform: scale(1.2);
+      box-shadow: 0 0 0 2px white, 0 0 0 4px #333;
+    }
+    .timer-bar {
+      height: 6px;
+      background-color: #ef4444;
+      border-radius: 3px;
+      transition: width 1s linear;
+    }
+    .player-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    .chat-bubble {
+      position: relative;
+      padding: 8px 12px;
+      border-radius: 12px;
+      max-width: 80%;
+      margin-bottom: 8px;
+    }
+    .chat-bubble.left {
+      background-color: #f3f4f6;
+      border-bottom-left-radius: 0;
+      align-self: flex-start;
+    }
+    .chat-bubble.right {
+      background-color: #ef4444;
+      color: white;
+      border-bottom-right-radius: 0;
+      align-self: flex-end;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-16">
+  <!-- 顶部导航 -->
+  <header class="bg-white sticky top-0 z-50 shadow-sm">
+    <nav class="container mx-auto px-4 py-3">
+      <div class="flex items-center justify-between">
+        <div class="w-24">
+          <button class="text-gray-500">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+        </div>
+        <h1 class="text-lg font-bold text-center">东北话你画我猜</h1>
+        <div class="w-24 text-right">
+          <span class="text-sm font-medium text-red-500">房间号: 6868</span>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- 主要内容 -->
+  <main class="container mx-auto px-4 py-4">
+    <!-- 游戏信息 -->
+    <div class="bg-white rounded-xl p-4 shadow-sm mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-2">
+            <i class="fas fa-paint-brush text-red-500"></i>
+          </div>
+          <div>
+            <h3 class="font-bold">轮到你画了</h3>
+            <p class="text-sm text-gray-500">提示词：<span class="text-red-500 font-medium">嘎嘎好</span></p>
+          </div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500 text-right">剩余时间</div>
+          <div class="text-xl font-bold text-red-500">45秒</div>
+        </div>
+      </div>
+      <div class="bg-gray-200 rounded-full overflow-hidden">
+        <div class="timer-bar" style="width: 75%;"></div>
+      </div>
+    </div>
+
+    <!-- 画布区域 -->
+    <div class="canvas-container shadow-md mb-4">
+      <canvas class="drawing-canvas" id="drawingCanvas"></canvas>
+    </div>
+
+    <!-- 绘画工具 -->
+    <div class="bg-white rounded-xl p-4 shadow-sm mb-4">
+      <div class="flex justify-between items-center">
+        <!-- 颜色选择 -->
+        <div class="color-picker">
+          <div class="color-option active" style="background-color: #000000;"></div>
+          <div class="color-option" style="background-color: #ef4444;"></div>
+          <div class="color-option" style="background-color: #3b82f6;"></div>
+          <div class="color-option" style="background-color: #10b981;"></div>
+          <div class="color-option" style="background-color: #f59e0b;"></div>
+        </div>
+        
+        <!-- 画笔大小 -->
+        <div class="brush-size">
+          <div class="brush-option" style="width: 8px; height: 8px;"></div>
+          <div class="brush-option active" style="width: 12px; height: 12px;"></div>
+          <div class="brush-option" style="width: 16px; height: 16px;"></div>
+          <div class="brush-option" style="width: 20px; height: 20px;"></div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="flex gap-2">
+          <button class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600">
+            <i class="fas fa-undo"></i>
+          </button>
+          <button class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 玩家列表和聊天 -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- 玩家列表 -->
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden md:col-span-1">
+        <div class="p-3 border-b border-gray-100">
+          <h3 class="font-bold">玩家列表</h3>
+        </div>
+        <div class="p-2">
+          <!-- 玩家1 -->
+          <div class="flex items-center justify-between p-2 bg-red-50 rounded-lg mb-2">
+            <div class="flex items-center">
+              <div class="player-avatar mr-2">
+                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="玩家头像" class="w-full h-full object-cover">
+              </div>
+              <div>
+                <div class="font-medium">小东北</div>
+                <div class="text-xs text-red-500">正在绘画...</div>
+              </div>
+            </div>
+            <div class="text-sm font-bold">2分</div>
+          </div>
+          
+          <!-- 玩家2 -->
+          <div class="flex items-center justify-between p-2 rounded-lg mb-2">
+            <div class="flex items-center">
+              <div class="player-avatar mr-2">
+                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="玩家头像" class="w-full h-full object-cover">
+              </div>
+              <div>
+                <div class="font-medium">东北姑娘</div>
+                <div class="text-xs text-gray-500">等待猜词</div>
+              </div>
+            </div>
+            <div class="text-sm font-bold">5分</div>
+          </div>
+          
+          <!-- 玩家3 -->
+          <div class="flex items-center justify-between p-2 rounded-lg">
+            <div class="flex items-center">
+              <div class="player-avatar mr-2">
+                <img src="https://randomuser.me/api/portraits/men/86.jpg" alt="玩家头像" class="w-full h-full object-cover">
+              </div>
+              <div>
+                <div class="font-medium">老铁666</div>
+                <div class="text-xs text-gray-500">等待猜词</div>
+              </div>
+            </div>
+            <div class="text-sm font-bold">3分</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 聊天区域 -->
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden md:col-span-2">
+        <div class="p-3 border-b border-gray-100">
+          <h3 class="font-bold">聊天区</h3>
+        </div>
+        <div class="p-3 h-48 overflow-y-auto flex flex-col">
+          <!-- 系统消息 -->
+          <div class="text-center text-xs text-gray-500 mb-2">
+            游戏开始，轮到 小东北 画画
+          </div>
+          
+          <!-- 聊天消息 -->
+          <div class="chat-bubble left">
+            <div class="text-xs text-gray-500 mb-1">东北姑娘</div>
+            <div>这是啥玩意儿啊？看不懂</div>
+          </div>
+          
+          <div class="chat-bubble right">
+            <div class="text-xs text-white opacity-80 mb-1">我</div>
+            <div>别急，我这就画明白了</div>
+          </div>
+          
+          <div class="chat-bubble left">
+            <div class="text-xs text-gray-500 mb-1">老铁666</div>
+            <div>是不是"好吃"？</div>
+          </div>
+          
+          <div class="text-center text-xs text-gray-500 my-2">
+            老铁666 猜错了
+          </div>
+        </div>
+        
+        <!-- 输入框 -->
+        <div class="p-3 border-t border-gray-100">
+          <div class="flex">
+            <input type="text" placeholder="输入你的猜测..." class="flex-grow px-4 py-2 bg-gray-100 rounded-l-lg focus:outline-none">
+            <button class="px-4 py-2 bg-red-500 text-white rounded-r-lg">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 底部导航 -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
+    <div class="flex justify-around py-3">
+      <button class="flex flex-col items-center text-gray-400">
+        <i class="fas fa-home text-xl"></i>
+        <span class="text-xs mt-1">首页</span>
+      </button>
+      <button class="flex flex-col items-center text-gray-400">
+        <i class="fas fa-book-open text-xl"></i>
+        <span class="text-xs mt-1">学习</span>
+      </button>
+      <button class="flex flex-col items-center text-red-500">
+        <i class="fas fa-gamepad text-xl"></i>
+        <span class="text-xs mt-1">娱乐</span>
+      </button>
+      <button class="flex flex-col items-center text-gray-400">
+        <i class="fas fa-user text-xl"></i>
+        <span class="text-xs mt-1">我的</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- 简单的画布脚本 -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const canvas = document.getElementById('drawingCanvas');
+      const ctx = canvas.getContext('2d');
+      let isDrawing = false;
+      
+      // 设置画布大小
+      function resizeCanvas() {
+        const container = canvas.parentElement;
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+      }
+      
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      
+      // 绘画功能
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('touchstart', startDrawing);
+      
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('touchmove', draw);
+      
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('touchend', stopDrawing);
+      
+      function startDrawing(e) {
+        isDrawing = true;
+        draw(e);
+      }
+      
+      function draw(e) {
+        if (!isDrawing) return;
+        
+        e.preventDefault();
+        
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#000000';
+        
+        let x, y;
+        
+        if (e.type.includes('mouse')) {
+          x = e.offsetX;
+          y = e.offsetY;
+        } else {
+          const rect = canvas.getBoundingClientRect();
+          x = e.touches[0].clientX - rect.left;
+          y = e.touches[0].clientY - rect.top;
+        }
+        
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+      }
+      
+      function stopDrawing() {
+        isDrawing = false;
+        ctx.beginPath();
+      }
+    });
+  </script>
+</body>
+</html> 
